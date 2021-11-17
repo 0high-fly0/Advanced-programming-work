@@ -1,65 +1,88 @@
 package lab08;
-
+//没有做对！！！
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 public class UnweightedGraphFindCycle<V> extends  UnweightedGraph<V> {
-    protected List<V> vertices = new ArrayList<>(); // Store vertices
-    protected List<Edge> edges;
-    UnweightedGraphFindCycle(){
+    static int[][] graph = new int[200][200];
+    //结点个数和边的个数
+    static int vNum,eNum;
+    //标记矩阵,0为当前结点未访问,1为访问过,-1表示当前结点后边的结点都被访问过。
+    static int[] color = new int[200];
+    //是否是DAG（有向无环图）
+    static boolean isDAG = true;
+
+    //图的深度遍历函数
+    List<Integer> getACycle(int i){
+        List<Integer> result=new ArrayList<Integer>();
+        System.out.println("正在访问结点"+i);
+        //结点i变为访问过的状态
+        color[i] = 1;
+        for(int j=1;j<=vNum;j++){
+            //如果当前结点有指向的结点
+            if(graph[i][j] != 0){
+                //并且已经被访问过
+                if(color[j] == 1){
+                    isDAG = false;//有环
+                    break;
+                }else if(color[j] == -1){
+                    //当前结点后边的结点都被访问过，直接跳至下一个结点
+                    continue;
+                }else{
+                    getACycle(j);//否则递归访问
+                }
+            }
+            result.add(i);
+        }
+        //遍历过所有相连的结点后，把本节点标记为-1
+        color[i] = -1;
+        return result;
     }
 
-    /** Construct a graph from vertices and edges stored in arrays */
-    public UnweightedGraphFindCycle(V[] vertices, int[][] edges) {
-        super(vertices, edges);
+    //创建图,以邻接矩阵表示
+    void create(){
+        Scanner sc = new Scanner(System.in);
+        System.out.println("正在创建图，请输入顶点个数vNum：");
+        vNum = sc.nextInt();
+        System.out.println("请输入边个数eNum：");
+        eNum = sc.nextInt();
+        //初始化邻接矩阵为0（如果3个顶点，顶点分别是1，2，3）
+        for(int i=1;i<=vNum;i++){
+            for(int j=1;j<=vNum;j++){
+                graph[i][j] = 0;
+            }
+        }
+        //输入边的情况
+        System.out.println("请输入边的头和尾:");
+        for(int k=1;k<=eNum;k++){
+            int i = sc.nextInt();
+            int j = sc.nextInt();
+            graph[i][j] = 1;
+        }
+        //初始化color数组为0，表示一开始所有顶点都未被访问过
+        for(int i=1;i<=vNum;i++){
+            color[i] = 0;
+        }
     }
 
-    /** Construct a graph from vertices and edges stored in List */
-    public UnweightedGraphFindCycle(List<V> vertices, List<Edge> edges) {
-        super(vertices, edges);
-        this.vertices=vertices;
-        this.edges=edges;
-    }
 
-    /** Construct a graph for integer vertices 0, 1, 2 and edge list */
-    public UnweightedGraphFindCycle(List<Edge> edges, int numberOfVertices) {
-        super(edges, numberOfVertices);
-    }
-
-    /** Construct a graph from integer vertices 0, 1, and edge array */
-    public UnweightedGraphFindCycle(int[][] edges, int numberOfVertices) {
-        super(edges, numberOfVertices);
-    }
-
-    public List<Integer> getACycle(int u){
-        AbstractGraph<String>.Tree dfs = (AbstractGraph<String>.Tree) this.dfs(u);
-        if (dfs.getNumberOfVerticesFound()!=vertices.size()) return null;
-
-    }
     public static void main(String[] args) {
-        String[] vertices = {"Seattle", "San Francisco", "Los Angeles",
-                "Denver", "Kansas City", "Chicago", "Boston", "New York",
-                "Atlanta", "Miami", "Dallas", "Houston"};
-
-        int[][] edges = {
-                {0, 1}, {0, 3}, {0, 5},
-                {1, 0}, {1, 2}, {1, 3},
-                {2, 1}, {2, 3}, {2, 4}, {2, 10},
-                {3, 0}, {3, 1}, {3, 2}, {3, 4}, {3, 5},
-                {4, 2}, {4, 3}, {4, 5}, {4, 7}, {4, 8}, {4, 10},
-                {5, 0}, {5, 3}, {5, 4}, {5, 6}, {5, 7},
-                {6, 5}, {6, 7},
-                {7, 4}, {7, 5}, {7, 6}, {7, 8},
-                {8, 4}, {8, 7}, {8, 9}, {8, 10}, {8, 11},
-                {9, 8}, {9, 11},
-                {10, 2}, {10, 4}, {10, 8}, {10, 11},
-                {11, 8}, {11, 9}, {11, 10}
-        };
-        UnweightedGraphFindCycle<String> graph = new UnweightedGraphFindCycle<>(vertices, edges);
-        List<Integer> aCycle = graph.getACycle(0);
-        if (aCycle==null) System.out.println("不存在环路");
-
+        UnweightedGraphFindCycle t = new UnweightedGraphFindCycle();
+        t.create();
+        //保证每个节点都遍历到，排除有的结点没有边的情况
+        for(int i=1;i<=vNum;i++){
+            //该结点后边的结点都被访问过了，跳过它
+            if(color[i] == -1){
+                continue;
+            }
+            t.getACycle(i);
+            if(!isDAG){
+                System.out.println("有环！");
+                break;
+            }
+        }
     }
 
 }
